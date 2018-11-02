@@ -7,12 +7,13 @@ import binascii
 def enanddecrypt(mode, input, key):
 
     #Gets the individual b64 keys and turns encodes them as bytes
-    enK = key.split(", ")[0].encode()
-    enN = key.split(", ")[1].encode()
+    enK = key[0].encode()
+    enN = key[1].encode()
 
     #Turns the b64 keys into ints
     k = int.from_bytes(base64.b64decode(enK), "little")
     n = int.from_bytes(base64.b64decode(enN), "little")
+    m = str(input)
 
     if mode == 0:
         #Encodes the message into byte form

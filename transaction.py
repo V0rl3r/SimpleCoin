@@ -1,11 +1,16 @@
-from signEncrypt.py import *
+import signEncrypt as se
 
 class Transaction:
     #FIGURE OUT WHERE THE PRIVATE KEY SHOULD COME FROM
-    def __init__(self, origID, destID, origPrKey, destPrKey, amt):
-        self.destID = enanddecrypt(0, destID, destPrKey)
+    def __init__(self, amt, origID, destID, origPrKey, destPrKey):
+        self.destID = se.enanddecrypt(0, amt, destPrKey)
         self.origID = origID
-        self.amtToAdd = enanddecrypt(0, amt, origPrKey)
+        self.isAmtSigned = True
+        if(origPrKey is None):
+            self.amtToAdd = amt
+            self.isAmtSigned = False
+        else:
+            self.amtToAdd = se.enanddecrypt(0, amt, origPrKey)
         encrypted = True
 
     def __repr__(self):
@@ -13,7 +18,8 @@ class Transaction:
 
     def unsign(self, destPuKey, origPuKey):
         self.destID = enanddecrypt(1, destID, destPuKey)
-        self.amtToAdd = enanddecrypt(1, amt, origPuKey)
+        if self.isAmtSigned:
+            self.amtToAdd = enanddecrypt(1, amt, origPuKey)
         encrpted = False
 
     def verify(self):
