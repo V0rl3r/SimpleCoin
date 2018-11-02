@@ -1,7 +1,9 @@
 import signEncrypt as se
 
 class Transaction:
-    #FIGURE OUT WHERE THE PRIVATE KEY SHOULD COME FROM
+    #***
+    #WHERE DO I CHECK VALIDITY OF AMOUNT
+    #***
     def __init__(self, amt, origID, destID, origPrKey, destPrKey):
         self.destID = se.enanddecrypt(0, amt, destPrKey)
         self.origID = origID
@@ -16,7 +18,7 @@ class Transaction:
     def __repr__(self):
         return str(self.destID) + str(self.origID) + str(self.amtToAdd)
 
-    def unsign(self, destPuKey, origPuKey):
+    def unsign(self, origPuKey, destPuKey):
         self.destID = enanddecrypt(1, destID, destPuKey)
         if self.isAmtSigned:
             self.amtToAdd = enanddecrypt(1, amt, origPuKey)

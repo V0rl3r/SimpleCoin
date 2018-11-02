@@ -1,6 +1,7 @@
 import block
 import transaction
 import base64
+import signEncrypt as se
 
 class BlockChain:
 
@@ -18,6 +19,8 @@ class BlockChain:
         self.createGenesis()
         self.tail = self.genesis
         self.genTransactions()
+        self.length = 1
+        self.mineBlock()
 
     def getKeys(self):
         keysA = []
@@ -54,6 +57,7 @@ class BlockChain:
     def createGenesis(self):
         data = transaction.Transaction(100, None, self.puKeyA, None, self.prKeyA)
         gen = block.Block(0, data)
+        self.genNonce(gen)
         self.genesis = self.Node()
         self.genesis.data = gen
 
@@ -62,27 +66,61 @@ class BlockChain:
         node.data = data
         node.prev = self.tail
         self.tail = node
+        self.length += 1
 
     def getLatest(self):
         return self.tail
 
     #Remove transaction if it fails, could take an array instead of one
     #Must check if transaction is valid, ie they have enough money
-    def mineBlock(self, transaction):
-        pass
+    #Do I decrypt the ID here?
+    #Does my encryption actually handle lists at all?
+    def mineBlock(self):
+        while len(self.transactions) > 0:
+            t = self.transactions[0]
+            #DO NOT USE IDENTIFY. ATTEMPT TO DECODE t.blank, and if it matches a public id you're good
+            if(se.identify(t.origID, self.puKeyA)):
+                sender = self.puKeyA
+                recvr = self.puKeyB
+            elif(se.identify(t.origID, self.puKeyB)):
+                sender = self.puKeyB
+                recvr = self.puKeyA
+            t.unsign(sender, recvr)
+            bal = self.getBalance(self, t)
+            print(bal)
+            if bal >= t.amtToAdd:
+                b = block.Block(self.length, data)
+                self.genNonce(b)
+                self.addBlock(b)
+                print("Added Block")
+            else:
+                del transactions[0]
+
+    #Use private key to authenticate
+    def getBalance(self, prKey):
+        cur = self.genesis
+        bal = 0
+        while True:
+            ts = cur.data.data
+            for t in ts:
+                if se.identify(ts.origID, prKey):
+                    bal -= ts.amtToAdd
+                elif se.identify(ts.destID, prKey):
+                    bal += ts.amtToAdd
+            if cur.next is None:
+                break
+        return bal
 
     def verifyIntegrity(self):
         pass
 
     #SWITCH TO BASE 16
-    def genNonce(self, block):
-        num = 0
-        block.nonce = num
-        hash = base64.b64encode(block.genHash()).decode()
+    def genNonce(self, b):
+        hash = base64.b16encode(b.genHash()).decode()
         while not hash[0:BlockChain.difficulty] == "00":
-            block.nonce += 1
-            hash = base64.b64encode(block.genHash()).decode()
-        block.hash = hash
+            b.nonce += 1
+            hash = base64.b16encode(b.genHash()).decode()
+        b.hash = hash
 
 #When your program runs, it should take in two private and public key pairs (as if you ahve two people)
 #Output creating "block chain...", "Reading pair A...", "Reading pair B...", "Mining Block 1...", "Done Mining Block 1..."

@@ -25,8 +25,8 @@ class Block:
         self.hash.update(tStampStr.encode())
         self.hash.update(dataStr.encode())
         self.hash.update(prevHashStr.encode())
-        self.hash.update(nonce.encode())
+        self.hash.update(nonceStr.encode())
         self.hash = self.hash.digest()
-        return self.hash.digest()
+        return self.hash
 
 #MUST VERIFY

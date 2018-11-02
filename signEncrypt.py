@@ -42,6 +42,52 @@ def enanddecrypt(mode, input, key):
             print("Incorrect Encryption")
             toBeWritten = None
     return toBeWritten
+
+#Takes two keys, checks if they are a pair
+def identify(a, b):
+
+    #Gets the individual b64 keys and turns encodes them as bytes
+    enA = a[0].encode()
+    enAN = a[1].encode()
+    enB = b[0].encode()
+    enBN = b[1].encode()
+
+    #Turns the b64 keys into ints
+    a = int.from_bytes(base64.b64decode(enA), "little")
+    an = int.from_bytes(base64.b64decode(enAN), "little")
+    b = int.from_bytes(base64.b64decode(enB), "little")
+    bn = int.from_bytes(base64.b64decode(enBN), "little")
+
+    m = "test"
+    #Encodes the message into byte form
+    enM = m.encode()
+    #Turns the message into an int
+    intM = int.from_bytes(enM, "little")
+    #Creates the cipher text
+    cipherT = pow(intM, a, an)
+    #Turns the cipher text into base 64
+    cipherT64 = base64.b64encode(cipherT.to_bytes(math.ceil(cipherT.bit_length()/8), "little"))
+    #Removes the byte notation from the base 64 cipher text
+    toBeWritten = cipherT64.decode()
+    try:
+        #Encodes the encrypted message into byte form
+        enM = toBeWritten.encode()
+        #Turns the encrypted message into the int form cipher text
+        cipherT = int.from_bytes(base64.b64decode(enM), "little")
+        #Gets the int form of the plain text
+        intM = pow(cipherT, b, bn)
+        #Gets the byte form of the plain text
+        enM = intM.to_bytes(math.ceil(intM.bit_length()/8), "little")
+        #Gets the string form from the byte form
+        toBeWritten = enM.decode()
+    except UnicodeDecodeError:
+        print("Incorrect Encryption")
+        toBeWritten = None
+    if not toBeWritten is None and toBeWritten == m:
+        return True
+    else:
+        return False
+
 '''
 #Input is 0, 1, 2, 3, signalling: sign with public, encrypt with private, decrypt with private, decrypt with public
 def enanddecrypt(mode, puKeyFile, prKeyFile, input)
