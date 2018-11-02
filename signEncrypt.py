@@ -1,6 +1,7 @@
 import base64
 import math
 import binascii
+import random
 
 #Key is in base64
 #0 encrypt, 1 decrypt
@@ -43,6 +44,7 @@ def enanddecrypt(mode, input, key):
             toBeWritten = None
     return toBeWritten
 
+#ONLY NEEDS TO USE AN INT, CUT DOWN ON STEPS
 #Takes two keys, checks if they are a pair
 def identify(a, b):
 
@@ -58,32 +60,11 @@ def identify(a, b):
     b = int.from_bytes(base64.b64decode(enB), "little")
     bn = int.from_bytes(base64.b64decode(enBN), "little")
 
-    m = "test"
-    #Encodes the message into byte form
-    enM = m.encode()
-    #Turns the message into an int
-    intM = int.from_bytes(enM, "little")
-    #Creates the cipher text
+    intM = random.randrange(1000, 10000, 1)
     cipherT = pow(intM, a, an)
-    #Turns the cipher text into base 64
-    cipherT64 = base64.b64encode(cipherT.to_bytes(math.ceil(cipherT.bit_length()/8), "little"))
-    #Removes the byte notation from the base 64 cipher text
-    toBeWritten = cipherT64.decode()
-    try:
-        #Encodes the encrypted message into byte form
-        enM = toBeWritten.encode()
-        #Turns the encrypted message into the int form cipher text
-        cipherT = int.from_bytes(base64.b64decode(enM), "little")
-        #Gets the int form of the plain text
-        intM = pow(cipherT, b, bn)
-        #Gets the byte form of the plain text
-        enM = intM.to_bytes(math.ceil(intM.bit_length()/8), "little")
-        #Gets the string form from the byte form
-        toBeWritten = enM.decode()
-    except UnicodeDecodeError:
-        print("Incorrect Encryption")
-        toBeWritten = None
-    if not toBeWritten is None and toBeWritten == m:
+    intM2 = pow(cipherT, b, bn)
+
+    if intM == intM2:
         return True
     else:
         return False
