@@ -3,26 +3,26 @@ import signEncrypt as se
 class Transaction:
     #***
     #WHERE DO I CHECK VALIDITY OF AMOUNT
+    #What is used to sign - private key of sender?
     #***
     def __init__(self, amt, origID, destID, origPrKey, destPrKey):
-        self.destID = se.enanddecrypt(0, amt, destPrKey)
-        self.origID = origID
-        self.isAmtSigned = True
-        if(origPrKey is None):
+        self.signed = True
+        if origID is None:
+            self.signed = False
+            self.destID = destID
             self.amtToAdd = amt
-            self.isAmtSigned = False
         else:
+            self.destID = se.enanddecrypt(0, amt, origPrKey)
             self.amtToAdd = se.enanddecrypt(0, amt, origPrKey)
-        encrypted = True
+        self.origID = origID
 
     def __repr__(self):
         return str(self.destID) + str(self.origID) + str(self.amtToAdd)
 
-    def unsign(self, origPuKey, destPuKey):
-        self.destID = enanddecrypt(1, destID, destPuKey)
-        if self.isAmtSigned:
-            self.amtToAdd = enanddecrypt(1, amt, origPuKey)
-        encrpted = False
+    def unsign(self, origPuKey):
+        if self.signed:
+            self.destID = se.enanddecrypt(1, self.destID, origPuKey)
+            self.amtToAdd = se.enanddecrypt(1, self.amtToAdd, origPuKey)
 
     def verify(self):
         if amt >= 0:

@@ -56,7 +56,7 @@ class BlockChain:
 
     def createGenesis(self):
         data = transaction.Transaction(100, None, self.puKeyA, None, self.prKeyA)
-        gen = block.Block(0, data)
+        gen = block.Block(0, [data])
         self.genNonce(gen)
         self.genesis = self.Node()
         self.genesis.data = gen
@@ -79,17 +79,12 @@ class BlockChain:
         while len(self.transactions) > 0:
             t = self.transactions[0]
             #DO NOT USE IDENTIFY. ATTEMPT TO DECODE t.blank, and if it matches a public id you're good
-            if(se.identify(t.origID, self.puKeyA)):
-                sender = self.puKeyA
-                recvr = self.puKeyB
-            elif(se.identify(t.origID, self.puKeyB)):
-                sender = self.puKeyB
-                recvr = self.puKeyA
-            t.unsign(sender, recvr)
-            bal = self.getBalance(self, t)
+            t.unsign(t.origID)
+            #Need the private key of sender!
+            bal = self.getBalance()
             print(bal)
             if bal >= t.amtToAdd:
-                b = block.Block(self.length, data)
+                b = block.Block(self.length, [t])
                 self.genNonce(b)
                 self.addBlock(b)
                 print("Added Block")
@@ -103,9 +98,9 @@ class BlockChain:
         while True:
             ts = cur.data.data
             for t in ts:
-                if se.identify(ts.origID, prKey):
+                if (not t.origID is None) and se.identify(t.origID, prKey):
                     bal -= ts.amtToAdd
-                elif se.identify(ts.destID, prKey):
+                elif se.identify(t.destID, prKey):
                     bal += ts.amtToAdd
             if cur.next is None:
                 break

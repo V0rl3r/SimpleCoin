@@ -69,9 +69,36 @@ def identify(a, b):
     else:
         return False
 
+#ID is the base64 string. keys are lists of lists of the two components
+def findUser(id, puKeys, prKeys):
+    try:
+        #Encodes the encrypted message into byte form
+        enM = id.encode()
+        #Turns the encrypted message into the int form cipher text
+        cipherT = int.from_bytes(base64.b64decode(enM), "little")
+        #Gets the int form of the plain text
+        for key in puKeys:
+            a = key[0].encode()
+            b = key[1].encode()
+            a = int.from_bytes(base64.b64decode(enA), "little")
+            b = int.from_bytes(base64.b64decode(enB), "little")
+            intM = pow(cipherT, a, b)
+            #Gets the byte form of the plain text
+            enM = intM.to_bytes(math.ceil(intM.bit_length()/8), "little")
+            #Gets the string form from the byte form
+            enM64 = base64.b64encode(enM)
+            for key2 in puKeys:
+                if key2 == enM64:
+                    return key2
+        return None
+    except binascii.Error:
+        print("Incorrect Encryption")
+        toBeWritten = None
+        return None
+
 '''
 #Input is 0, 1, 2, 3, signalling: sign with public, encrypt with private, decrypt with private, decrypt with public
-def enanddecrypt(mode, puKeyFile, prKeyFile, input)
+def enanddecrypt(mode, puKeyFile, prKeyFile, input):
 
     keys = []
 
