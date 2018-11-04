@@ -8,6 +8,7 @@ import random
 def enanddecrypt(mode, input, key):
 
     #Gets the individual b64 keys and turns encodes them as bytes
+    key = key.split(', ')
     enK = key[0].encode()
     enN = key[1].encode()
 
@@ -49,8 +50,10 @@ def enanddecrypt(mode, input, key):
 def identify(a, b):
 
     #Gets the individual b64 keys and turns encodes them as bytes
+    a = a.split(', ')
     enA = a[0].encode()
     enAN = a[1].encode()
+    b = b.split(', ')
     enB = b[0].encode()
     enBN = b[1].encode()
 
@@ -69,7 +72,7 @@ def identify(a, b):
     else:
         return False
 
-#ID is the base64 string. keys are lists of lists of the two components
+#ID is the base64 string. keys are lists of base64 strings
 def findUser(id, puKeys, prKeys):
     try:
         #Encodes the encrypted message into byte form
@@ -78,6 +81,7 @@ def findUser(id, puKeys, prKeys):
         cipherT = int.from_bytes(base64.b64decode(enM), "little")
         #Gets the int form of the plain text
         for key in puKeys:
+            key = key.split(', ')
             a = key[0].encode()
             b = key[1].encode()
             a = int.from_bytes(base64.b64decode(enA), "little")

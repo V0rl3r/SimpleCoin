@@ -28,8 +28,9 @@ class BlockChain:
             keysA.append(puKeyA.read())
         with open('privateA.key', 'r') as prKeyA:
             keysA.append(prKeyA.read())
-        public = keysA[0].split(", ")
-        private = keysA[1].split(", ")
+
+        public = keysA[0]
+        private = keysA[1]
         self.puKeyA = public
         self.prKeyA = private
         keysB = []
@@ -37,10 +38,13 @@ class BlockChain:
             keysB.append(puKeyB.read())
         with open('privateB.key', 'r') as prKeyB:
             keysB.append(prKeyB.read())
-        public = keysB[0].split(", ")
-        private = keysB[1].split(", ")
+        public = keysB[0]
+        private = keysB[1]
         self.puKeyB = public
         self.prKeyB = private
+        self.users = {}
+        self.users[self.puKeyA] = "A"
+        self.users[self.puKeyB] = "B"
         print("a", self.puKeyA)
         print("b", self.puKeyB)
         print("ap", self.prKeyA)
@@ -48,23 +52,34 @@ class BlockChain:
 
     def genTransactions(self):
         self.transactions = []
-        self.transactions.append(transaction.Transaction(40, self.puKeyA, self.puKeyB, self.prKeyA, self.prKeyB))
-        self.transactions.append(transaction.Transaction(15, self.puKeyB, self.puKeyA, self.prKeyB, self.prKeyA))
-        self.transactions.append(transaction.Transaction(60, self.puKeyA, self.puKeyB, self.prKeyA, self.prKeyB))
-        self.transactions.append(transaction.Transaction(20, self.puKeyA, self.puKeyB, self.prKeyA, self.prKeyB))
-        self.transactions.append(transaction.Transaction(50, self.puKeyB, self.puKeyA, self.prKeyB, self.prKeyA))
+        self.transactions.append(transaction.Transaction(40, self.puKeyA, self.puKeyB, self.prKeyA))
+        '''
+        self.transactions[0].unsign(self.transactions[0].origID)
+        print(self.puKeyA == self.transactions[0].origID)
+        print(self.puKeyB == self.transactions[0].destID)
+        print("Original = 40", "New =", self.transactions[0].amtToAdd)
+        print(self.puKeyB)
+        print("***")
+        print(self.transactions[0].destID)
+        print("***")
+        '''
+        self.transactions.append(transaction.Transaction(15, self.puKeyB, self.puKeyA, self.prKeyB))
+        self.transactions.append(transaction.Transaction(60, self.puKeyA, self.puKeyB, self.prKeyA))
+        self.transactions.append(transaction.Transaction(20, self.puKeyA, self.puKeyB, self.prKeyA))
+        self.transactions.append(transaction.Transaction(50, self.puKeyB, self.puKeyA, self.prKeyB))
 
     def createGenesis(self):
-        data = transaction.Transaction(100, None, self.puKeyA, None, self.prKeyA)
+        data = transaction.Transaction(100, None, self.puKeyA, None)
         gen = block.Block(0, [data])
         self.genNonce(gen)
         self.genesis = self.Node()
         self.genesis.data = gen
 
     def addBlock(self, data):
-        node = Node()
+        node = self.Node()
         node.data = data
         node.prev = self.tail
+        self.tail.next = node
         self.tail = node
         self.length += 1
 
@@ -81,29 +96,36 @@ class BlockChain:
             #DO NOT USE IDENTIFY. ATTEMPT TO DECODE t.blank, and if it matches a public id you're good
             t.unsign(t.origID)
             #Need the private key of sender!
-            bal = self.getBalance()
+            bal = self.getBalance(t.origID)
+            print
+            print("Sender:", self.users[t.origID])
             print(bal)
-            if bal >= t.amtToAdd:
+            print(t.amtToAdd)
+            if bal >= int(t.amtToAdd):
                 b = block.Block(self.length, [t])
                 self.genNonce(b)
                 self.addBlock(b)
                 print("Added Block")
-            else:
-                del transactions[0]
+            del self.transactions[0]
 
     #Use private key to authenticate
-    def getBalance(self, prKey):
+    def getBalance(self, puKey):
         cur = self.genesis
         bal = 0
+        print("BL len:", self.length)
         while True:
+            print("Looped")
             ts = cur.data.data
             for t in ts:
-                if (not t.origID is None) and se.identify(t.origID, prKey):
-                    bal -= ts.amtToAdd
-                elif se.identify(t.destID, prKey):
-                    bal += ts.amtToAdd
+                if (not t.origID is None) and t.origID == puKey:
+                    print("Is orig")
+                    bal -= int(t.amtToAdd)
+                elif t.destID == puKey:
+                    print("Is dest")
+                    bal += int(t.amtToAdd)
             if cur.next is None:
                 break
+            cur = cur.next
         return bal
 
     def verifyIntegrity(self):

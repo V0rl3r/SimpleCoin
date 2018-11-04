@@ -5,14 +5,14 @@ class Transaction:
     #WHERE DO I CHECK VALIDITY OF AMOUNT
     #What is used to sign - private key of sender?
     #***
-    def __init__(self, amt, origID, destID, origPrKey, destPrKey):
+    def __init__(self, amt, origID, destID, origPrKey):
         self.signed = True
         if origID is None:
             self.signed = False
             self.destID = destID
             self.amtToAdd = amt
         else:
-            self.destID = se.enanddecrypt(0, amt, origPrKey)
+            self.destID = se.enanddecrypt(0, destID, origPrKey)
             self.amtToAdd = se.enanddecrypt(0, amt, origPrKey)
         self.origID = origID
 
@@ -21,6 +21,11 @@ class Transaction:
 
     def unsign(self, origPuKey):
         if self.signed:
+            print("---------------------------")
+            print(self.destID)
+            print("---------------------------")
+            print(origPuKey)
+            print("---------------------------")
             self.destID = se.enanddecrypt(1, self.destID, origPuKey)
             self.amtToAdd = se.enanddecrypt(1, self.amtToAdd, origPuKey)
 
