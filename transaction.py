@@ -12,7 +12,8 @@ class Transaction:
             self.destID = destID
             self.amtToAdd = amt
         else:
-            self.destID = se.enanddecrypt(0, destID, origPrKey)
+            #self.destID = se.enanddecrypt(0, destID, origPrKey)
+            self.destID = destID
             self.amtToAdd = se.enanddecrypt(0, amt, origPrKey)
         self.origID = origID
 
@@ -21,12 +22,14 @@ class Transaction:
 
     def unsign(self, origPuKey):
         if self.signed:
+            '''
             print("---------------------------")
             print(self.destID)
             print("---------------------------")
             print(origPuKey)
             print("---------------------------")
-            self.destID = se.enanddecrypt(1, self.destID, origPuKey)
+            '''
+            #self.destID = se.enanddecrypt(1, self.destID, origPuKey)
             self.amtToAdd = se.enanddecrypt(1, self.amtToAdd, origPuKey)
 
     def verify(self):

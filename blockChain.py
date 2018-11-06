@@ -16,13 +16,16 @@ class BlockChain:
 
     def __init__(self):
         self.getKeys()
+        print("Creating BlockChain...")
         self.createGenesis()
         self.tail = self.genesis
         self.genTransactions()
         self.length = 1
         self.mineBlock()
+        self.verifyIntegrity()
 
     def getKeys(self):
+        print("Reading Pair A...")
         keysA = []
         with open('publicA.key', 'r') as puKeyA:
             keysA.append(puKeyA.read())
@@ -33,6 +36,7 @@ class BlockChain:
         private = keysA[1]
         self.puKeyA = public
         self.prKeyA = private
+        print("Reading Pair B...")
         keysB = []
         with open('publicB.key', 'r') as puKeyB:
             keysB.append(puKeyB.read())
@@ -45,10 +49,14 @@ class BlockChain:
         self.users = {}
         self.users[self.puKeyA] = "A"
         self.users[self.puKeyB] = "B"
+        self.users["A"] = self.puKeyA
+        self.users["B"] = self.puKeyB
+        '''
         print("a", self.puKeyA)
         print("b", self.puKeyB)
         print("ap", self.prKeyA)
         print("bp", self.prKeyB)
+        '''
 
     def genTransactions(self):
         self.transactions = []
@@ -71,6 +79,7 @@ class BlockChain:
     def createGenesis(self):
         data = transaction.Transaction(100, None, self.puKeyA, None)
         gen = block.Block(0, [data])
+        gen.idx = 0
         self.genNonce(gen)
         self.genesis = self.Node()
         self.genesis.data = gen
@@ -93,35 +102,42 @@ class BlockChain:
     def mineBlock(self):
         while len(self.transactions) > 0:
             t = self.transactions[0]
-            #DO NOT USE IDENTIFY. ATTEMPT TO DECODE t.blank, and if it matches a public id you're good
             t.unsign(t.origID)
-            #Need the private key of sender!
-            bal = self.getBalance(t.origID)
-            print
-            print("Sender:", self.users[t.origID])
-            print(bal)
-            print(t.amtToAdd)
-            if bal >= int(t.amtToAdd):
-                b = block.Block(self.length, [t])
-                self.genNonce(b)
-                self.addBlock(b)
-                print("Added Block")
+            accepted = False
+            if int(t.amtToAdd) >= 0:
+                bal = self.getBalance(t.origID)
+                print
+                #print("Sender:", self.users[t.origID])
+                #print(bal)
+                #print(t.amtToAdd)
+                if bal >= int(t.amtToAdd):
+                    accepted = True
+                    print("Transaction " + str(self.length) + " (Amount: " + str(t.amtToAdd) + " ): " + self.users[t.origID] + "->" + self.users[t.destID] + " Accepted")
+                    b = block.Block(self.length, [t])
+                    b.prevHash = self.tail.data.hash
+                    print("Mining Block " + str(self.length) + "... ", end = "")
+                    self.genNonce(b)
+                    print("(" + str(b.nonce) + ", " + str(b.hash) + ")")
+                    self.addBlock(b)
+                    accepted = True
+            if not accepted:
+                print("Transaction " + str(b.idx) + " (Amount: " + str(t.amtToAdd) + "): " + self.users[t.origID] + "->" + self.users[t.destID] + " Declined")
             del self.transactions[0]
 
     #Use private key to authenticate
     def getBalance(self, puKey):
         cur = self.genesis
         bal = 0
-        print("BL len:", self.length)
+        #print("BL len:", self.length)
         while True:
-            print("Looped")
+            #print("Looped")
             ts = cur.data.data
             for t in ts:
                 if (not t.origID is None) and t.origID == puKey:
-                    print("Is orig")
+                    #print("Is orig")
                     bal -= int(t.amtToAdd)
                 elif t.destID == puKey:
-                    print("Is dest")
+                    #print("Is dest")
                     bal += int(t.amtToAdd)
             if cur.next is None:
                 break
@@ -129,7 +145,38 @@ class BlockChain:
         return bal
 
     def verifyIntegrity(self):
-        pass
+        cur = self.genesis
+        valid = True
+        print("Chain Verification...", end="")
+        while True:
+            '''
+            if cur.data.idx == 0:
+                if not cur.data.verifyPrint():
+                    print("Hashwrong", cur.data.idx)
+                    valid = False
+                    break
+            '''
+            #elif not cur.data.verify():
+            if not cur.data.verify():
+                print("Hashwrong", cur.data.idx)
+                valid = False
+                break
+            if not cur.next is None:
+                if not cur.data.hash == cur.next.data.prevHash:
+                    print("prevhashwrong", cur.data.idx)
+                    valid = False
+                    break
+
+            if cur.next is None:
+                break
+            cur = cur.next
+        if valid:
+            print("Verified")
+            print("Amount in A's Wallet: " + str(self.getBalance(self.users["A"])))
+            print("Amount in B's Wallet: " + str(self.getBalance(self.users["B"])))
+        else:
+            print("Unverified")
+
 
     #SWITCH TO BASE 16
     def genNonce(self, b):
@@ -138,6 +185,8 @@ class BlockChain:
             b.nonce += 1
             hash = base64.b16encode(b.genHash()).decode()
         b.hash = hash
+        #if b.idx == 0:
+        #base64.b16encode(b.genHashPrint()).decode()
 
 #When your program runs, it should take in two private and public key pairs (as if you ahve two people)
 #Output creating "block chain...", "Reading pair A...", "Reading pair B...", "Mining Block 1...", "Done Mining Block 1..."

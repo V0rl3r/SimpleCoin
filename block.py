@@ -1,5 +1,6 @@
 import hashlib
 import time
+import base64
 
 class Block:
 
@@ -28,5 +29,24 @@ class Block:
         self.hash.update(nonceStr.encode())
         self.hash = self.hash.digest()
         return self.hash
+
+    def verify(self):
+        idxStr = str(self.idx)
+        tStampStr = str(self.tStamp)
+        dataStr = str(self.data)
+        prevHashStr = str(self.prevHash)
+        nonceStr = str(self.nonce)
+        sha = hashlib.sha256()
+        sha.update(idxStr.encode())
+        sha.update(tStampStr.encode())
+        sha.update(dataStr.encode())
+        sha.update(prevHashStr.encode())
+        sha.update(nonceStr.encode())
+        sha = base64.b16encode(sha.digest()).decode()
+        #ADD TRANSACTION VERIFICATION
+        if self.hash == sha:
+            return True
+        else:
+            return False
 
 #MUST VERIFY
